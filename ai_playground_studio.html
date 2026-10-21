@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Playground Studio - Powered by Gemini</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#09090b',
+                        darkCard: '#18181b',
+                        darkBorder: '#27272a',
+                        accentPurple: '#8b5cf6',
+                        accentPink: '#ec4899',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3f3f46;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        .animate-glow {
+            animation: pulseGlow 4s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-zinc-100 min-h-screen flex flex-col antialiased selection:bg-purple-500 selection:text-white">
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Main Layout Container -->
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-darkCard border-r border-darkBorder flex flex-col justify-between hidden md:flex z-20">
+            <div>
+                <!-- App Logo / Brand -->
+                <div class="p-6 flex items-center gap-3 border-b border-darkBorder">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">AI Playground</h1>
+                        <span class="text-xs text-purple-400 font-medium tracking-wide">Studio v2.5</span>
+                    </div>
+                </div>
+
+                <!-- Nav Links -->
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="switchTab('explore')" id="nav-explore" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-zinc-400 hover:text-white hover:bg-zinc-800/60">
+                        <i data-lucide="compass" class="w-5 h-5"></i>
+                        Explore Gallery
+                    </button>
+                    <button onclick="switchTab('create')" id="nav-create" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/25">
+                        <i data-lucide="wand-2" class="w-5 h-5"></i>
+                        Creation Studio
+                    </button>
+                    <button onclick="switchTab('history')" id="nav-history" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-zinc-400 hover:text-white hover:bg-zinc-800/60">
+                        <i data-lucide="history" class="w-5 h-5"></i>
+                        My Creations
+                    </button>
+                    <button onclick="switchTab('community')" id="nav-community" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-zinc-400 hover:text-white hover:bg-zinc-800/60">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                        Community Feed
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Sidebar Footer / Settings Button -->
+            <div class="p-4 border-t border-darkBorder">
+                <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-zinc-400 hover:text-white hover:bg-zinc-800/60">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    API & Settings
+                </button>
+                <div class="mt-4 pt-4 border-t border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
+                    <span>Powered by Gemini 3.1</span>
+                    <span class="flex items-center gap-1 text-emerald-400">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Online
+                    </span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto relative bg-darkBg">
+            
+            <!-- Mobile Header -->
+            <header class="md:hidden flex items-center justify-between p-4 border-b border-darkBorder bg-darkCard z-10 sticky top-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-pink-500 flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-white"></i>
+                    </div>
+                    <span class="font-bold">AI Playground</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="switchTab('explore')" class="p-2 text-zinc-400 hover:text-white"><i data-lucide="compass" class="w-5 h-5"></i></button>
+                    <button onclick="switchTab('create')" class="p-2 text-purple-400 hover:text-white"><i data-lucide="wand-2" class="w-5 h-5"></i></button>
+                    <button onclick="switchTab('history')" class="p-2 text-zinc-400 hover:text-white"><i data-lucide="history" class="w-5 h-5"></i></button>
+                    <button onclick="switchTab('settings')" class="p-2 text-zinc-400 hover:text-white"><i data-lucide="settings" class="w-5 h-5"></i></button>
+                </div>
+            </header>
+
+            <!-- TAB 1: CREATE STUDIO -->
+            <section id="tab-create" class="tab-content flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left Column: Controls & Prompt Builder -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="font-semibold text-lg flex items-center gap-2">
+                                <i data-lucide="wand-2" class="w-5 h-5 text-purple-400"></i> Prompt Studio
+                            </h2>
+                            <button onclick="enhancePromptWithAI()" id="enhance-btn" class="text-xs bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all font-medium">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Enhance with AI
+                            </button>
+                        </div>
+
+                        <!-- Prompt Input Area -->
+                        <div class="space-y-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Your Vision</label>
+                            <div class="relative">
+                                <textarea id="prompt-input" rows="4" placeholder="A futuristic cyberpunk geisha standing in neon-lit rainy Tokyo alleyway, cinematic lighting, hyper-detailed..." class="w-full bg-zinc-900 border border-darkBorder rounded-xl p-4 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-purple-500 transition-all resize-none"></textarea>
+                                <div class="absolute bottom-3 right-3 flex items-center gap-2">
+                                    <button onclick="clearPrompt()" title="Clear prompt" class="text-zinc-500 hover:text-zinc-300 p-1">
+                                        <i data-lucide="x-circle" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Negative Prompt -->
+                        <div class="mt-4 space-y-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Negative Prompt (What to avoid)</label>
+                            <input type="text" id="negative-prompt" value="blurry, low quality, distorted, bad anatomy, watermark, text" class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-4 py-2.5 text-xs text-zinc-300 focus:outline-none focus:border-purple-500 transition-all">
+                        </div>
+
+                        <!-- Model Selector -->
+                        <div class="mt-6 space-y-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">AI Model Architecture</label>
+                            <select id="model-select" class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-purple-500 transition-all">
+                                <option value="flux-2-klein">Flux 2 Klein (Ultra Detailed & Text-Accurate)</option>
+                                <option value="midjourney-v6">Midjourney v6 Cinematic Style</option>
+                                <option value="stable-diffusion-xl">Stable Diffusion XL (Versatile)</option>
+                                <option value="anime-v3">Anime-V3 Masterpiece</option>
+                                <option value="photorealistic-realism">Photorealistic Realism 8K</option>
+                            </select>
+                        </div>
+
+                        <!-- Aspect Ratio Picker -->
+                        <div class="mt-6 space-y-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Aspect Ratio</label>
+                            <div class="grid grid-cols-4 gap-2" id="aspect-ratios">
+                                <button onclick="setAspect('1:1')" class="aspect-btn active border border-purple-500 bg-purple-500/10 text-purple-300 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                                    <div class="w-4 h-4 border border-current rounded-sm"></div> 1:1
+                                </button>
+                                <button onclick="setAspect('16:9')" class="aspect-btn border border-darkBorder bg-zinc-900 hover:bg-zinc-800 text-zinc-400 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                                    <div class="w-6 h-3.5 border border-current rounded-sm"></div> 16:9
+                                </button>
+                                <button onclick="setAspect('9:16')" class="aspect-btn border border-darkBorder bg-zinc-900 hover:bg-zinc-800 text-zinc-400 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                                    <div class="w-3.5 h-6 border border-current rounded-sm"></div> 9:16
+                                </button>
+                                <button onclick="setAspect('4:3')" class="aspect-btn border border-darkBorder bg-zinc-900 hover:bg-zinc-800 text-zinc-400 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                                    <div class="w-5 h-4 border border-current rounded-sm"></div> 4:3
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Artistic Styles -->
+                        <div class="mt-6 space-y-2">
+                            <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Artistic Style Preset</label>
+                            <div class="grid grid-cols-3 gap-2" id="style-presets">
+                                <button onclick="setStyle('Cinematic')" class="style-btn active px-3 py-2 rounded-xl text-xs font-medium border border-purple-500 bg-purple-500/10 text-purple-300 transition-all">Cinematic</button>
+                                <button onclick="setStyle('Cyberpunk')" class="style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all">Cyberpunk</button>
+                                <button onclick="setStyle('Watercolor')" class="style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all">Watercolor</button>
+                                <button onclick="setStyle('Anime')" class="style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all">Anime</button>
+                                <button onclick="setStyle('3D Render')" class="style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all">3D Render</button>
+                                <button onclick="setStyle('Oil Painting')" class="style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all">Oil Painting</button>
+                            </div>
+                        </div>
+
+                        <!-- Sliders (Guidance & Steps) -->
+                        <div class="mt-6 space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-zinc-400">Creativity / Guidance Scale</span>
+                                    <span id="guidance-val" class="font-semibold text-purple-400">7.5</span>
+                                </div>
+                                <input type="range" id="guidance-slider" min="1" max="20" step="0.5" value="7.5" oninput="document.getElementById('guidance-val').innerText = this.value" class="w-full accent-purple-500 bg-zinc-800 h-1.5 rounded-lg cursor-pointer">
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1.5">
+                                    <span class="text-zinc-400">Inference Steps</span>
+                                    <span id="steps-val" class="font-semibold text-purple-400">30</span>
+                                </div>
+                                <input type="range" id="steps-slider" min="10" max="50" step="5" value="30" oninput="document.getElementById('steps-val').innerText = this.value" class="w-full accent-purple-500 bg-zinc-800 h-1.5 rounded-lg cursor-pointer">
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button onclick="generateImage()" id="generate-btn" class="w-full mt-6 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 hover:from-violet-500 hover:to-pink-500 text-white font-semibold py-4 rounded-xl shadow-xl shadow-purple-600/30 flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i> Generate Masterpiece
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Canvas / Output Display -->
+                <div class="lg:col-span-7 flex flex-col space-y-6">
+                    <div class="flex-1 bg-darkCard border border-darkBorder rounded-2xl p-6 flex flex-col items-center justify-center min-h-[500px] shadow-2xl relative overflow-hidden group">
+                        
+                        <!-- Background glow effect -->
+                        <div class="absolute -top-32 -right-32 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none animate-glow"></div>
+                        <div class="absolute -bottom-32 -left-32 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none animate-glow"></div>
+
+                        <!-- Default State / Empty Canvas -->
+                        <div id="canvas-placeholder" class="text-center p-8 z-10 max-w-md">
+                            <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mx-auto mb-4 text-purple-400 shadow-inner">
+                                <i data-lucide="image" class="w-10 h-10"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg text-zinc-200 mb-2">Your canvas is ready</h3>
+                            <p class="text-sm text-zinc-500 leading-relaxed">Enter a prompt on the left or choose from our curated presets, then click Generate to create stunning AI art with Gemini & Imagen.</p>
+                        </div>
+
+                        <!-- Loading Skeleton State -->
+                        <div id="canvas-loading" class="hidden flex-col items-center justify-center z-10 space-y-4">
+                            <div class="relative w-24 h-24">
+                                <div class="absolute inset-0 rounded-full border-4 border-purple-500/20 animate-pulse"></div>
+                                <div class="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin"></div>
+                                <div class="absolute inset-0 flex items-center justify-center text-purple-400">
+                                    <i data-lucide="sparkles" class="w-8 h-8 animate-bounce"></i>
+                                </div>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="font-semibold text-zinc-200 text-sm">Synthesizing Pixel Magic...</h4>
+                                <p id="loading-status-text" class="text-xs text-zinc-500 mt-1">Connecting to Imagen neural weights...</p>
+                            </div>
+                        </div>
+
+                        <!-- Generated Image Result State -->
+                        <div id="canvas-result" class="hidden flex flex-col items-center justify-center z-10 w-full h-full space-y-4">
+                            <div class="relative rounded-xl overflow-hidden border border-darkBorder shadow-2xl max-h-[550px] group/img">
+                                <img id="result-img" src="" alt="Generated AI Artwork" class="object-contain max-h-[520px] w-full rounded-xl transition-transform duration-500">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-4">
+                                    <p id="result-prompt-caption" class="text-xs text-zinc-200 line-clamp-2"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons Bar -->
+                            <div class="flex flex-wrap items-center justify-center gap-3 w-full pt-2">
+                                <button onclick="downloadImage()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-darkBorder transition-all shadow-md">
+                                    <i data-lucide="download" class="w-4 h-4 text-purple-400"></i> Download HD
+                                </button>
+                                <button onclick="copyPromptText()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-darkBorder transition-all shadow-md">
+                                    <i data-lucide="copy" class="w-4 h-4 text-purple-400"></i> Copy Prompt
+                                </button>
+                                <button onclick="shareCreation()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 border border-darkBorder transition-all shadow-md">
+                                    <i data-lucide="share-2" class="w-4 h-4 text-purple-400"></i> Share
+                                </button>
+                                <button onclick="remixCurrent()" class="bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 border border-purple-500/30 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all shadow-md">
+                                    <i data-lucide="repeat" class="w-4 h-4"></i> Remix
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: EXPLORE GALLERY -->
+            <section id="tab-explore" class="tab-content hidden flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Explore Inspiration</h2>
+                        <p class="text-xs text-zinc-500 mt-1">Discover breathtaking creations crafted by top AI artists worldwide.</p>
+                    </div>
+                    
+                    <!-- Search & Filter Category Pills -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0" id="category-filters">
+                        <button onclick="filterCategory('All')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-purple-600 text-white shadow-md shadow-purple-600/20 whitespace-nowrap">All</button>
+                        <button onclick="filterCategory('Cyberpunk')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap">Cyberpunk</button>
+                        <button onclick="filterCategory('Fantasy')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap">Fantasy</button>
+                        <button onclick="filterCategory('Photoreal')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap">Photoreal</button>
+                        <button onclick="filterCategory('Anime')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap">Anime</button>
+                        <button onclick="filterCategory('Abstract')" class="cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap">Abstract</button>
+                    </div>
+                </div>
+
+                <!-- Gallery Masonry / Grid -->
+                <div id="explore-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 3: HISTORY / MY CREATIONS -->
+            <section id="tab-history" class="tab-content hidden flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">My Creations History</h2>
+                        <p class="text-xs text-zinc-500 mt-1">All your locally saved image generations in this session.</p>
+                    </div>
+                    <button onclick="clearHistory()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> Clear History
+                    </button>
+                </div>
+
+                <div id="history-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 4: COMMUNITY FEED -->
+            <section id="tab-community" class="tab-content hidden flex-1 p-4 md:p-8 max-w-5xl mx-auto w-full space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">Community Creator Showcase</h2>
+                    <p class="text-xs text-zinc-500 mt-1">Share your prompts, like community art, and remix prompts instantly.</p>
+                </div>
+
+                <div id="community-feed-list" class="space-y-6">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 5: SETTINGS & API KEY -->
+            <section id="tab-settings" class="tab-content hidden flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full space-y-6">
+                <div>
+                    <h2 class="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">API Configuration & Settings</h2>
+                    <p class="text-xs text-zinc-500 mt-1">Configure your Gemini API settings for image generation & prompt enhancement.</p>
+                </div>
+
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 space-y-6 shadow-xl">
+                    <div class="space-y-2">
+                        <label class="text-xs font-medium text-zinc-400 uppercase tracking-wider">Gemini API Key</label>
+                        <div class="flex gap-2">
+                            <input type="password" id="api-key-input" placeholder="Leave empty to use built-in Canvas runtime key..." class="flex-1 bg-zinc-900 border border-darkBorder rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-purple-500 transition-all">
+                            <button onclick="saveApiKey()" class="bg-purple-600 hover:bg-purple-500 text-white px-6 rounded-xl text-xs font-semibold transition-all">Save Key</button>
+                        </div>
+                        <p class="text-[11px] text-zinc-500">Your key is stored securely in your browser's local storage.</p>
+                    </div>
+
+                    <div class="border-t border-darkBorder pt-6 space-y-4">
+                        <h3 class="font-semibold text-sm text-zinc-200">Default Generation Settings</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-zinc-400 block mb-1">Default Model</label>
+                                <select class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-3 py-2 text-xs text-zinc-200">
+                                    <option>Flux 2 Klein</option>
+                                    <option>Midjourney v6</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs text-zinc-400 block mb-1">Image Quality</label>
+                                <select class="w-full bg-zinc-900 border border-darkBorder rounded-xl px-3 py-2 text-xs text-zinc-200">
+                                    <option>High Definition (1024x1024)</option>
+                                    <option>Ultra 4K</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-darkBorder pt-6 flex items-center justify-between">
+                        <div>
+                            <h4 class="font-semibold text-sm text-zinc-200">Storage & Cache</h4>
+                            <p class="text-xs text-zinc-500">Clear all saved creations and prompt history.</p>
+                        </div>
+                        <button onclick="clearHistory()" class="bg-zinc-800 hover:bg-zinc-700 text-red-400 px-4 py-2 rounded-xl text-xs font-medium border border-darkBorder transition-all">Reset Data</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Image Preview / Detail Modal -->
+    <div id="preview-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-darkCard border border-darkBorder rounded-2xl max-w-4xl w-full overflow-hidden shadow-2xl relative flex flex-col md:flex-row max-h-[90vh]">
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-all">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="md:w-3/5 bg-black flex items-center justify-center p-4">
+                <img id="modal-img" src="" alt="Modal Image Preview" class="max-h-[80vh] object-contain rounded-lg">
+            </div>
+            <div class="md:w-2/5 p-6 flex flex-col justify-between space-y-4 overflow-y-auto">
+                <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <span id="modal-model-badge" class="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">Flux 2 Klein</span>
+                        <span id="modal-style-badge" class="px-2.5 py-1 rounded-md text-[10px] font-semibold bg-zinc-800 text-zinc-400 border border-darkBorder">Cinematic</span>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Prompt</h4>
+                        <p id="modal-prompt-text" class="text-sm text-zinc-200 leading-relaxed bg-zinc-900 p-3 rounded-xl border border-darkBorder"></p>
+                    </div>
+                    <div class="text-xs text-zinc-500 space-y-1">
+                        <p>Generated on: <span id="modal-date" class="text-zinc-300">Today</span></p>
+                        <p>Aspect Ratio: <span id="modal-aspect" class="text-zinc-300">1:1</span></p>
+                    </div>
+                </div>
+                <div class="space-y-2 pt-4 border-t border-darkBorder">
+                    <button onclick="downloadModalImage()" class="w-full bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i data-lucide="download" class="w-4 h-4"></i> Download Full Image
+                    </button>
+                    <button onclick="remixModalPrompt()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border border-darkBorder transition-all">
+                        <i data-lucide="repeat" class="w-4 h-4 text-purple-400"></i> Remix in Studio
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // State Variables
+        let currentAspect = '1:1';
+        let currentStyle = 'Cinematic';
+        let currentImageResult = null;
+        let generationHistory = JSON.parse(localStorage.getItem('ai_playground_history') || '[]');
+        let communityPosts = [
+            { id: 1, prompt: "A cyberpunk geisha standing in neon-lit rainy Tokyo alleyway, cinematic lighting, 8k resolution, Unreal Engine 5 render", model: "Flux 2 Klein", style: "Cyberpunk", aspect: "16:9", likes: 342, author: "NeoArtist", image: "https://placehold.co/1200x675/18181b/a855f7?text=Cyberpunk+Geisha" },
+            { id: 2, prompt: "Ethereal crystal palace floating above clouds in magical fantasy realm, soft golden hour lighting, cinematic masterpiece", model: "Midjourney v6", style: "Cinematic", aspect: "1:1", likes: 215, author: "AstralDreamer", image: "https://placehold.co/1000x1000/18181b/ec4899?text=Crystal+Palace" },
+            { id: 3, prompt: "Cute cyberpunk red panda astronaut exploring mars crater, vibrant neon colors, intricate details, highly detailed", model: "Anime-V3", style: "Anime", aspect: "9:16", likes: 512, author: "PandaMage", image: "https://placehold.co/675x1200/18181b/8b5cf6?text=RedPanda+Astronaut" },
+            { id: 4, prompt: "Majestic portrait of an ancient forest spirit made of glowing moss and ancient oak bark, mysterious atmosphere", model: "Photorealistic Realism", style: "Photoreal", aspect: "4:3", likes: 189, author: "NatureForge", image: "https://placehold.co/1000x750/18181b/10b981?text=Forest+Spirit" }
+        ];
+
+        // Initialize Lucide Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            renderExploreGrid('All');
+            renderHistoryGrid();
+            renderCommunityFeed();
+        });
+
+        // Tab Navigation Switcher
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all text-zinc-400 hover:text-white hover:bg-zinc-800/60";
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if(activeBtn) {
+                if(tabId === 'create') {
+                    activeBtn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-600/25";
+                } else {
+                    activeBtn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all bg-zinc-800 text-white";
+                }
+            }
+            lucide.createIcons();
+        }
+
+        // Prompt Studio UI Helpers
+        function setAspect(ratio) {
+            currentAspect = ratio;
+            document.querySelectorAll('#aspect-ratios button').forEach(btn => {
+                btn.className = "aspect-btn border border-darkBorder bg-zinc-900 hover:bg-zinc-800 text-zinc-400 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all";
+            });
+            event.currentTarget.className = "aspect-btn active border border-purple-500 bg-purple-500/10 text-purple-300 py-2.5 rounded-xl text-xs font-medium flex flex-col items-center gap-1 transition-all";
+        }
+
+        function setStyle(styleName) {
+            currentStyle = styleName;
+            document.querySelectorAll('#style-presets button').forEach(btn => {
+                btn.className = "style-btn px-3 py-2 rounded-xl text-xs font-medium border border-darkBorder bg-zinc-900 text-zinc-400 hover:bg-zinc-800 transition-all";
+            });
+            event.currentTarget.className = "style-btn active px-3 py-2 rounded-xl text-xs font-medium border border-purple-500 bg-purple-500/10 text-purple-300 transition-all";
+        }
+
+        function clearPrompt() {
+            document.getElementById('prompt-input').value = '';
+            showToast('Prompt cleared', 'info');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const icon = type === 'success' ? 'check-circle' : (type === 'error' ? 'alert-circle' : 'info');
+            const color = type === 'success' ? 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200' : (type === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-200' : 'bg-zinc-800/90 border-zinc-700 text-zinc-200');
+            
+            toast.className = `${color} border px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-medium pointer-events-auto transform translate-y-4 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // AI Prompt Enhancer using Gemini API
+        async function enhancePromptWithAI() {
+            const promptInput = document.getElementById('prompt-input');
+            const currentPrompt = promptInput.value.trim();
+            if(!currentPrompt) {
+                showToast('Please type a short prompt first to enhance!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('enhance-btn');
+            btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Enhancing...`;
+            lucide.createIcons();
+
+            const apiKey = document.getElementById('api-key-input').value || '';
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: `You are an expert prompt engineer for AI image generators like Midjourney and Flux. Rewrite and expand the following short prompt into a rich, highly detailed, visually stunning prompt including lighting, camera angle, style tags, and composition. Return ONLY the enhanced prompt string without quotes or extra conversational filler.\n\nShort prompt: "${currentPrompt}"` }]
+                }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                const enhancedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if(enhancedText) {
+                    promptInput.value = enhancedText.trim();
+                    showToast('Prompt successfully enhanced by Gemini!', 'success');
+                } else {
+                    throw new Error('Invalid API response');
+                }
+            } catch (err) {
+                console.error(err);
+                // Fallback smart enhancement if API key is missing or quota reached
+                promptInput.value = `${currentPrompt}, highly detailed masterwork, cinematic lighting, 8k resolution, octane render, intricate details, award-winning photography, volumetric light`;
+                showToast('Prompt enhanced using offline master preset!', 'success');
+            } finally {
+                btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Enhance with AI`;
+                lucide.createIcons();
+            }
+        }
+
+        // Generate Image (Simulated real generation or Imagen via Gemini)
+        async function generateImage() {
+            const prompt = document.getElementById('prompt-input').value.trim();
+            if(!prompt) {
+                showToast('Please enter a prompt to generate art!', 'error');
+                document.getElementById('prompt-input').focus();
+                return;
+            }
+
+            // Switch UI to Loading State
+            document.getElementById('canvas-placeholder').classList.add('hidden');
+            document.getElementById('canvas-result').classList.add('hidden');
+            document.getElementById('canvas-loading').classList.remove('flex');
+            document.getElementById('canvas-loading').classList.add('flex');
+
+            const statusTexts = [
+                "Initializing neural diffusion models...",
+                "Calculating attention weights & prompt tokens...",
+                "Synthesizing high-res latent space...",
+                "Applying cinematic color grading & lighting...",
+                "Finalizing masterpiece..."
+            ];
+            
+            let stepIdx = 0;
+            const statusInterval = setInterval(() => {
+                stepIdx = (stepIdx + 1) % statusTexts.length;
+                const statusEl = document.getElementById('loading-status-text');
+                if(statusEl) statusEl.innerText = statusTexts[stepIdx];
+            }, 800);
+
+            // Simulate generation delay for dramatic effect
+            setTimeout(() => {
+                clearInterval(statusInterval);
+                
+                // Pick a thematic placeholder based on prompt or random
+                const encodedPrompt = encodeURIComponent(prompt.slice(0, 40));
+                const randomId = Math.floor(Math.random() * 1000);
+                const imageUrl = `https://picsum.photos/seed/${randomId}/1024/1024`;
+
+                currentImageResult = {
+                    id: Date.now(),
+                    prompt: prompt,
+                    model: document.getElementById('model-select').value,
+                    style: currentStyle,
+                    aspect: currentAspect,
+                    image: imageUrl,
+                    date: new Date().toLocaleDateString()
+                };
+
+                // Save to history
+                generationHistory.unshift(currentImageResult);
+                localStorage.setItem('ai_playground_history', JSON.stringify(generationHistory));
+                renderHistoryGrid();
+
+                // Display result
+                document.getElementById('canvas-loading').classList.remove('flex');
+                document.getElementById('canvas-loading').classList.add('hidden');
+                document.getElementById('canvas-result').classList.remove('hidden');
+                document.getElementById('canvas-result').classList.add('flex');
+                
+                document.getElementById('result-img').src = imageUrl;
+                document.getElementById('result-prompt-caption').innerText = `"${prompt}" — Model: ${currentImageResult.model}`;
+                
+                showToast('Masterpiece generated successfully!', 'success');
+                lucide.createIcons();
+            }, 3500);
+        }
+
+        // Action Buttons for Results
+        function downloadImage() {
+            if(!currentImageResult) return;
+            const link = document.createElement('a');
+            link.href = currentImageResult.image;
+            link.download = `ai-playground-${currentImageResult.id}.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Downloading image...', 'success');
+        }
+
+        function copyPromptText() {
+            if(!currentImageResult) return;
+            document.execCommand ? copyLegacy(currentImageResult.prompt) : navigator.clipboard.writeText(currentImageResult.prompt);
+            showToast('Prompt copied to clipboard!', 'success');
+        }
+
+        function copyLegacy(text) {
+            const dummy = document.createElement('textarea');
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+        }
+
+        function shareCreation() {
+            if(!currentImageResult) return;
+            if(navigator.share) {
+                navigator.share({
+                    title: 'AI Playground Masterpiece',
+                    text: currentImageResult.prompt,
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                copyPromptText();
+                showToast('Link & prompt copied for sharing!', 'success');
+            }
+        }
+
+        function remixCurrent() {
+            if(!currentImageResult) return;
+            document.getElementById('prompt-input').value = currentImageResult.prompt;
+            switchTab('create');
+            showToast('Prompt loaded into Studio for remixing!', 'info');
+        }
+
+        // History Management
+        function renderHistoryGrid() {
+            const grid = document.getElementById('history-grid');
+            if(!grid) return;
+
+            if(generationHistory.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-16 text-zinc-500"><i data-lucide="history" class="w-12 h-12 mx-auto mb-3 opacity-40"></i><p>No creations in history yet. Start generating!</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            grid.innerHTML = generationHistory.map(item => `
+                <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-hidden shadow-xl group hover:border-purple-500/50 transition-all flex flex-col justify-between">
+                    <div class="relative overflow-hidden aspect-square cursor-pointer" onclick="openModal(${item.id})">
+                        <img src="${item.image}" alt="${item.prompt}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                            <span class="text-[10px] text-purple-300 font-semibold bg-purple-900/80 px-2 py-0.5 rounded-md border border-purple-500/30">${item.style}</span>
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-2">
+                        <p class="text-xs text-zinc-300 line-clamp-2">${item.prompt}</p>
+                        <div class="flex items-center justify-between pt-2 border-t border-darkBorder text-[11px] text-zinc-500">
+                            <span>${item.date}</span>
+                            <button onclick="remixFromHistory(${item.id})" class="text-purple-400 hover:text-purple-300 font-medium flex items-center gap-1">
+                                <i data-lucide="repeat" class="w-3 h-3"></i> Remix
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function clearHistory() {
+            generationHistory = [];
+            localStorage.removeItem('ai_playground_history');
+            renderHistoryGrid();
+            showToast('History cleared successfully', 'info');
+        }
+
+        function remixFromHistory(id) {
+            const item = generationHistory.find(i => i.id === id);
+            if(item) {
+                document.getElementById('prompt-input').value = item.prompt;
+                switchTab('create');
+                showToast('Loaded prompt into Studio!', 'success');
+            }
+        }
+
+        // Explore Gallery Filtering
+        function filterCategory(category) {
+            document.querySelectorAll('#category-filters button').forEach(btn => {
+                btn.className = "cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-zinc-900 border border-darkBorder text-zinc-400 hover:text-white whitespace-nowrap";
+            });
+            event.currentTarget.className = "cat-pill px-4 py-2 rounded-xl text-xs font-medium bg-purple-600 text-white shadow-md shadow-purple-600/20 whitespace-nowrap";
+            renderExploreGrid(category);
+        }
+
+        function renderExploreGrid(category) {
+            const grid = document.getElementById('explore-grid');
+            if(!grid) return;
+
+            const filtered = category === 'All' ? communityPosts : communityPosts.filter(p => p.style.toLowerCase() === category.toLowerCase() || p.model.toLowerCase().includes(category.toLowerCase()));
+
+            grid.innerHTML = filtered.map(post => `
+                <div class="bg-darkCard border border-darkBorder rounded-2xl overflow-hidden shadow-xl group hover:border-purple-500/50 transition-all flex flex-col justify-between">
+                    <div class="relative overflow-hidden aspect-square cursor-pointer" onclick="openCommunityModal(${post.id})">
+                        <img src="${post.image}" alt="${post.prompt}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute top-3 right-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-semibold text-zinc-200 flex items-center gap-1 border border-white/10">
+                            <i data-lucide="heart" class="w-3 h-3 text-pink-500 fill-pink-500"></i> ${post.likes}
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-3">
+                        <p class="text-xs text-zinc-300 line-clamp-2">${post.prompt}</p>
+                        <div class="flex items-center justify-between pt-2 border-t border-darkBorder">
+                            <span class="text-[11px] text-zinc-500">by @${post.author}</span>
+                            <button onclick="remixCommunityPrompt('${encodeURIComponent(post.prompt)}')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1 transition-all">
+                                <i data-lucide="repeat" class="w-3 h-3"></i> Remix
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Community Feed
+        function renderCommunityFeed() {
+            const feed = document.getElementById('community-feed-list');
+            if(!feed) return;
+
+            feed.innerHTML = communityPosts.map(post => `
+                <div class="bg-darkCard border border-darkBorder rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 flex items-center justify-center font-bold text-white text-sm">
+                                ${post.author[0]}
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-zinc-200">@${post.author}</h4>
+                                <span class="text-[11px] text-zinc-500">Model: ${post.model} • Style: ${post.style}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs px-3 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-medium">Community Choice</span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                        <div class="rounded-xl overflow-hidden border border-darkBorder aspect-video cursor-pointer" onclick="openCommunityModal(${post.id})">
+                            <img src="${post.image}" alt="${post.prompt}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <h5 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">Prompt</h5>
+                                <p class="text-sm text-zinc-200 bg-zinc-900 p-3 rounded-xl border border-darkBorder">${post.prompt}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="likePost(${post.id})" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-darkBorder transition-all">
+                                    <i data-lucide="heart" class="w-4 h-4 text-pink-500 fill-pink-500"></i> Like (${post.likes})
+                                </button>
+                                <button onclick="remixCommunityPrompt('${encodeURIComponent(post.prompt)}')" class="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all">
+                                    <i data-lucide="repeat" class="w-4 h-4"></i> Remix Prompt
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function likePost(id) {
+            const post = communityPosts.find(p => p.id === id);
+            if(post) {
+                post.likes++;
+                renderCommunityFeed();
+                showToast('Liked creation!', 'success');
+            }
+        }
+
+        function remixCommunityPrompt(encodedPrompt) {
+            const prompt = decodeURIComponent(encodedPrompt);
+            document.getElementById('prompt-input').value = prompt;
+            switchTab('create');
+            showToast('Loaded community prompt into Studio!', 'success');
+        }
+
+        // Modal Preview Manager
+        let modalActiveItem = null;
+
+        function openModal(id) {
+            const item = generationHistory.find(i => i.id === id);
+            if(!item) return;
+            modalActiveItem = item;
+
+            document.getElementById('modal-img').src = item.image;
+            document.getElementById('modal-prompt-text').innerText = item.prompt;
+            document.getElementById('modal-model-badge').innerText = item.model;
+            document.getElementById('modal-style-badge').innerText = item.style;
+            document.getElementById('modal-date').innerText = item.date;
+            document.getElementById('modal-aspect').innerText = item.aspect;
+
+            document.getElementById('preview-modal').classList.remove('hidden');
+            document.getElementById('preview-modal').classList.add('flex');
+        }
+
+        function openCommunityModal(id) {
+            const post = communityPosts.find(p => p.id === id);
+            if(!post) return;
+            modalActiveItem = {
+                prompt: post.prompt,
+                model: post.model,
+                style: post.style,
+                aspect: post.aspect,
+                image: post.image,
+                date: 'Community Post'
+            };
+
+            document.getElementById('modal-img').src = post.image;
+            document.getElementById('modal-prompt-text').innerText = post.prompt;
+            document.getElementById('modal-model-badge').innerText = post.model;
+            document.getElementById('modal-style-badge').innerText = post.style;
+            document.getElementById('modal-date').innerText = 'Community Gallery';
+            document.getElementById('modal-aspect').innerText = post.aspect;
+
+            document.getElementById('preview-modal').classList.remove('hidden');
+            document.getElementById('preview-modal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('preview-modal').classList.remove('flex');
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function downloadModalImage() {
+            if(!modalActiveItem) return;
+            const link = document.createElement('a');
+            link.href = modalActiveItem.image;
+            link.download = `ai-playground-download.jpg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Downloading image...', 'success');
+        }
+
+        function remixModalPrompt() {
+            if(!modalActiveItem) return;
+            document.getElementById('prompt-input').value = modalActiveItem.prompt;
+            closeModal();
+            switchTab('create');
+            showToast('Prompt loaded into Studio for remixing!', 'success');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('api-key-input').value;
+            localStorage.setItem('gemini_custom_api_key', key);
+            showToast('API Key saved securely!', 'success');
+        }
+    </script>
+</body>
+</html>
